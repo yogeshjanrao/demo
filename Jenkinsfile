@@ -11,29 +11,36 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Compile the Java code using Maven
-                sh 'mvn -f shield/pom.xml clean compile'
+                dir('shield') {
+                    // Compile the Java code using Maven
+                    sh 'mvn clean compile'
+                }
             }
         }
 
         stage('Package') {
             steps {
-                // Package the application
-                sh 'mvn -f shield/pom.xml package'
+                dir('shield') {
+                    // Package the application
+                    sh 'mvn package'
+                }
             }
         }
 
         stage('Archive') {
             steps {
                 // Archive the build artifacts
-                archiveArtifacts artifacts: '**/shield/target/*.jar', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'shield/target/*.jar', allowEmptyArchive: true
             }
         }
 
         stage('Deploy') {
             steps {
                 // Deploy the application (placeholder for actual deployment steps)
-                echo 'Deploying application...'
+                echo "Deploying shield on local ..."
+                sh 'process_pid= ps | grep "java -Dserver.port=9000" | awk "{print $2}"'
+                sh 'if [[ -n "$process_pid" ]]; then kill -9 "$process_pid"; fi'
+                sh 'env SERVER.PORT=9000 nohup java -jar shield/target/*.jar &> ~/Desktop/shield.log &'
             }
         }
     }
